@@ -1,0 +1,11 @@
+{
+  "name": "tiny-fiber",
+  "version": "1.0.0",
+  "description": "a tiny react fiber impl",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "vincenteof",
+  "license": "ISC"
+}

@@ -13,9 +13,15 @@ export interface Element<
 }
 
 export interface Fiber<P = Props> {
-  props: Element<P>['props']
   type: Element<P>['type']
+  pendingProps: Element<P>['props']
   parent?: Fiber
   sibling?: Fiber
   child?: Fiber
+  alternate?: Fiber
+  stateNode?: FiberRoot | Node
+}
+
+export interface FiberRoot {
+  current: Fiber
 }

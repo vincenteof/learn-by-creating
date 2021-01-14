@@ -1,4 +1,4 @@
-import { Fiber, Element } from './types'
+import { Fiber, Element, EffectFlag } from './types'
 
 class ChildReconciler {
   shouldTrackSideEffects: boolean
@@ -7,15 +7,35 @@ class ChildReconciler {
     this.shouldTrackSideEffects = shouldTrackSideEffects
   }
 
-  placeSingleChild(fiber: Fiber) {
-    if (this.shouldTrackSideEffects && !fiber.alternate) {
-    }
+  reconcileSingleElement = (
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | undefined,
+    el: Element
+  ) => {
+    let child = currentFirstChild
+    while (child) {}
   }
 
-  reconcile(returnFiber: Fiber, currentFiber: Fiber | undefined, el: Element) {
-    const isObject = typeof el === 'object' && el !== null
+  placeSingleChild = (fiber: Fiber) => {
+    if (this.shouldTrackSideEffects && !fiber.alternate) {
+      fiber.effectFlag = EffectFlag.Placement
+    }
+    return fiber
+  }
+
+  reconcile(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | undefined,
+    el: Element
+  ) {
+    const isObject = typeof el === 'object' && !el
+    if (isObject) {
+    }
   }
 }
+
+const reconciler = new ChildReconciler(true)
+const mounter = new ChildReconciler(false)
 
 export function reconcileChildren(
   current: Fiber | undefined,
@@ -23,6 +43,8 @@ export function reconcileChildren(
   nextElement: Element
 ) {
   if (!current) {
+    WIP.child = mounter.reconcile(WIP, null, nextElement)
   } else {
+    WIP.child = reconciler.reconcile(WIP, current.child, nextElement)
   }
 }

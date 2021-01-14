@@ -10,12 +10,14 @@ export interface Element<
 > {
   props: P
   type: T
+  key?: string
 }
 
 export interface Fiber<P = Props> {
   type: Element<P>['type']
   pendingProps: Element<P>['props']
   prevProps: Element<P>['props']
+  key?: Element<P>['key']
   return?: Fiber
   sibling?: Fiber
   child?: Fiber

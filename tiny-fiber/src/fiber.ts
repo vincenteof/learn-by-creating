@@ -1,4 +1,4 @@
-import { Fiber, WorkTag } from './types'
+import { Fiber, WorkTag, EffectFlag } from './types'
 
 export function createWIP(current: Fiber, props: Record<string, any>) {
   let WIP = current.alternate
@@ -13,7 +13,7 @@ export function createWIP(current: Fiber, props: Record<string, any>) {
   return WIP
 }
 
-function createFiber(
+export function createFiber(
   tag: WorkTag,
   props: Record<string, any>,
   type: Fiber['type']
@@ -22,5 +22,25 @@ function createFiber(
     tag,
     type,
     pendingProps: props,
+    prevProps: {},
+    effectFlag: EffectFlag.NoFlags,
+  }
+}
+
+export function cloneChildFibers(WIP: Fiber) {
+  let currentChild = WIP.child
+  if (!currentChild) {
+    return
+  }
+
+  let newChild = createWIP(currentChild, currentChild.pendingProps)
+  WIP.child = newChild
+  newChild.return = WIP
+
+  while (currentChild.sibling) {
+    currentChild = currentChild.sibling
+    newChild.sibling = createWIP(currentChild, currentChild.pendingProps)
+    newChild = newChild.sibling
+    newChild.return = WIP
   }
 }

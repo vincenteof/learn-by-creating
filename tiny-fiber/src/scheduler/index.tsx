@@ -1,5 +1,9 @@
-import { Fiber, FiberRoot, WorkTag } from './types'
+import { Fiber, FiberRoot, WorkTag } from '../types'
+import { createWIP } from '../fiber'
+import beginWork from './beginWork'
+import completeWork from './completeWork'
 
+const expireTime = 1
 let nextUnitOfWork: Fiber | undefined
 
 export function scheduleWork(fiber: Fiber) {
@@ -21,16 +25,26 @@ function performWork(dl: IdleDeadline, root: FiberRoot) {
 
 function workLoop(dl: IdleDeadline, root: FiberRoot) {
   if (!nextUnitOfWork) {
+    nextUnitOfWork = createWIP(root.current, {})
+  }
+  while (nextUnitOfWork && dl.timeRemaining() > expireTime) {
+    nextUnitOfWork = performUnitOfWork(nextUnitOfWork)
   }
 }
 
-function performUnitOfWork(WIP: Fiber) {}
+function performUnitOfWork(WIP: Fiber) {
+  const current = WIP.alternate
+  let next = beginWork(current, WIP)
+  WIP.prevProps = WIP.pendingProps
+  if (!next) {
+    next = completeUnitOfWork(WIP)
+  }
+  return next
+}
 
-function completeUnitOfWork(WIP: Fiber) {}
-
-function beginWork(current: Fiber | undefined, WIP: Fiber) {}
-
-function completeWork(current: Fiber | undefined, WIP: Fiber) {}
+function completeUnitOfWork(WIP: Fiber) {
+  return undefined
+}
 
 function completeRoot(root: FiberRoot, finishedWork: Fiber) {}
 

@@ -1,4 +1,6 @@
 import { Fiber, Element, EffectFlag } from './types'
+import { createFiber, createFiberFromElement } from './fiber'
+import { flow } from 'lodash-es'
 
 class ChildReconciler {
   shouldTrackSideEffects: boolean
@@ -14,6 +16,9 @@ class ChildReconciler {
   ) => {
     let child = currentFirstChild
     while (child) {}
+    const created = createFiberFromElement(el)
+    created.return = returnFiber
+    return created
   }
 
   placeSingleChild = (fiber: Fiber) => {
@@ -30,6 +35,11 @@ class ChildReconciler {
   ) {
     const isObject = typeof el === 'object' && !el
     if (isObject) {
+      return flow(this.reconcileSingleElement, this.placeSingleChild)(
+        returnFiber,
+        currentFirstChild,
+        el
+      )
     }
   }
 }

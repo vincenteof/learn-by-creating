@@ -13,6 +13,8 @@ export interface Element<
   key?: string
 }
 
+export type Thing = Element | Thing[]
+
 export interface Fiber<P = Props> {
   type: Element<P>['type']
   pendingProps: Element<P>['props']
@@ -23,6 +25,7 @@ export interface Fiber<P = Props> {
   child?: Fiber
   alternate?: Fiber
   stateNode?: FiberRoot | Node
+  index?: number
   tag: WorkTag
   effectFlag: EffectFlag
 }

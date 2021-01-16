@@ -2,7 +2,24 @@
 # yarn lockfile v1
 
 
+"@types/lodash-es@^4.17.4":
+  version "4.17.4"
+  resolved "https://registry.npm.taobao.org/@types/lodash-es/download/@types/lodash-es-4.17.4.tgz?cache=0&sync_timestamp=1608034213156&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40types%2Flodash-es%2Fdownload%2F%40types%2Flodash-es-4.17.4.tgz#b2e440d2bf8a93584a9fd798452ec497986c9b97"
+  integrity sha1-suRA0r+Kk1hKn9eYRS7El5hsm5c=
+  dependencies:
+    "@types/lodash" "*"
+
+"@types/lodash@*":
+  version "4.14.167"
+  resolved "https://registry.npm.taobao.org/@types/lodash/download/@types/lodash-4.14.167.tgz#ce7d78553e3c886d4ea643c37ec7edc20f16765e"
+  integrity sha1-zn14VT48iG1OpkPDfsftwg8Wdl4=
+
 "@types/requestidlecallback@^0.3.1":
   version "0.3.1"
   resolved "https://registry.npm.taobao.org/@types/requestidlecallback/download/@types/requestidlecallback-0.3.1.tgz#34bb89753b1cdc72d0547522527b1cb0f02b5ec4"
   integrity sha1-NLuJdTsc3HLQVHUiUnscsPArXsQ=
+
+lodash-es@^4.17.20:
+  version "4.17.20"
+  resolved "https://registry.npm.taobao.org/lodash-es/download/lodash-es-4.17.20.tgz#29f6332eefc60e849f869c264bc71126ad61e8f7"
+  integrity sha1-KfYzLu/GDoSfhpwmS8cRJq1h6Pc=

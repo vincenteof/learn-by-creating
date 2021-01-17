@@ -10,11 +10,19 @@ function updateRoot(current: Fiber | undefined, WIP: Fiber) {
 }
 
 function updateDOMComponent(current: Fiber | undefined, WIP: Fiber) {
-  return undefined
+  const pendingProps = WIP.pendingProps
+  let nextChildren = pendingProps.children
+  reconcileChildren(current, WIP, nextChildren)
+  return WIP.child
 }
 
 function updateFC(current: Fiber | undefined, WIP: Fiber) {
-  return undefined
+  const Component = WIP.type as Function
+  const pendingProps = WIP.pendingProps
+  let nextChildren = Component(pendingProps)
+  // todo: deal with hooks
+  reconcileChildren(current, WIP, nextChildren)
+  return WIP.child
 }
 
 function beginWork(current: Fiber | undefined, WIP: Fiber): Fiber | undefined {

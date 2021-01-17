@@ -53,4 +53,5 @@ export enum EffectFlag {
   Update = 0b00000000000000000100,
   PlacementAndUpdate = Placement | Update,
   Deletion = 0b00000000000000001000,
+  Incomplete = 0b00000010000000000000,
 }

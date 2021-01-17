@@ -1,4 +1,4 @@
-import { Fiber, FiberRoot, WorkTag } from '../types'
+import { Fiber, FiberRoot, WorkTag, EffectFlag } from '../types'
 import { createWIP } from '../fiber'
 import beginWork from './beginWork'
 import completeWork from './completeWork'
@@ -43,6 +43,17 @@ function performUnitOfWork(WIP: Fiber) {
 }
 
 function completeUnitOfWork(WIP: Fiber) {
+  while (true) {
+    const current = WIP.alternate
+    const returnFiber = WIP.return
+    const siblingFiber = WIP.sibling
+    if ((WIP.effectFlag & EffectFlag.Incomplete) === EffectFlag.NoFlags) {
+      let next = completeWork(current, WIP)
+      if (next) {
+        return next
+      }
+    }
+  }
   return undefined
 }
 

@@ -97,6 +97,35 @@ class ChildReconciler {
     return created
   }
 
+  mapRemainingChildren = (currentFirstChild: Fiber | undefined) => {
+    const existingChildren = new Map<string | number, Fiber>()
+    let existingChild = currentFirstChild
+    while (existingChild) {
+      if (existingChild.key) {
+        existingChildren.set(existingChild.key, existingChild)
+      } else {
+        existingChildren.set(existingChild.index, existingChild)
+      }
+      existingChild = existingChild.sibling
+    }
+    return existingChildren
+  }
+
+  updateFromMap = (
+    existingChildren: Map<string | number, Fiber>,
+    returnFiber: Fiber,
+    newIdx: number,
+    element: Thing
+  ) => {
+    if (element && typeof element === 'object') {
+      if (!Array.isArray(element)) {
+        const matchedFiber = existingChildren.get(element.key || newIdx)
+        return this.updateElement(returnFiber, matchedFiber, element)
+      }
+    }
+    return undefined
+  }
+
   reconcileChildrenArray = (
     returnFiber: Fiber,
     currentFirstChild: Fiber | undefined,
@@ -156,7 +185,32 @@ class ChildReconciler {
       return resultingFirstChild
     }
 
-    // this.mapRemainingChildren(returnFiber, oldFiber)
+    const existingChildren = this.mapRemainingChildren(oldFiber)
+    for (; newIdx < nextThing.length; newIdx++) {
+      const newFiber = this.updateFromMap(
+        existingChildren,
+        returnFiber,
+        newIdx,
+        nextThing[newIdx]
+      )
+      if (newFiber) {
+        if (this.shouldTrackSideEffects && newFiber.alternate) {
+          existingChildren.delete(newFiber.key || newIdx)
+        }
+        lastPlacedIndex = this.placeChild(newFiber, lastPlacedIndex, newIdx)
+        if (!previousNewFiber) {
+          resultingFirstChild = newFiber
+        } else {
+          previousNewFiber.sibling = newFiber
+        }
+        previousNewFiber = newFiber
+      }
+    }
+
+    if (this.shouldTrackSideEffects) {
+      existingChildren.forEach((child) => this.deleteChild(returnFiber, child))
+    }
+
     return resultingFirstChild
   }
 

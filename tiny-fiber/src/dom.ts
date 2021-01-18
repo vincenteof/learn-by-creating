@@ -23,7 +23,7 @@ export function render(el: Element, container: Node & { _fRoot?: FiberRoot }) {
   if (!_fRoot) {
     container._fRoot = {
       containerInfo: container,
-      current: createFiber(WorkTag.HostRoot, el.props, el.type),
+      current: createFiber(WorkTag.HostRoot, el.props, el.type, el.key),
       renderer: new Renderer(el),
     }
   } else {

@@ -55,3 +55,5 @@ export enum EffectFlag {
   Deletion = 0b00000000000000001000,
   Incomplete = 0b00000010000000000000,
 }
+
+export interface Hook {}

@@ -1,4 +1,4 @@
-import { Fiber, Element, Thing, EffectTag } from './types'
+import { Fiber, Element, Thing, Flags } from './types'
 import { createFiberFromElement, createWIP } from './fiber'
 import { flow } from 'lodash-es'
 
@@ -216,7 +216,7 @@ class ChildReconciler {
 
   placeSingleChild = (fiber: Fiber) => {
     if (this.shouldTrackSideEffects && !fiber.alternate) {
-      fiber.EffectTag = EffectTag.Placement
+      fiber.flags = Flags.Placement
     }
     return fiber
   }
@@ -242,13 +242,13 @@ class ChildReconciler {
     if (current) {
       const oldIndex = current.index
       if (oldIndex < lastPlacedIndex) {
-        newFiber.EffectTag = EffectTag.Placement
+        newFiber.flags = Flags.Placement
         return lastPlacedIndex
       } else {
         return oldIndex
       }
     } else {
-      newFiber.EffectTag = EffectTag.Placement
+      newFiber.flags = Flags.Placement
       return lastPlacedIndex
     }
   }

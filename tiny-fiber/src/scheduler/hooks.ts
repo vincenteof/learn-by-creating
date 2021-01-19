@@ -1,7 +1,8 @@
 import {
   Fiber,
   Hook,
-  EffectTag,
+  Flags,
+  HookEffectTag,
   Effect,
   FunctionComponentUpdateQueue,
 } from '../types'
@@ -62,9 +63,18 @@ function cloneHook(hook: Hook): Hook {
   }
 }
 
+export function useEffect(create: Effect['create'], inputs: Effect['inputs']) {
+  useEffectImpl(
+    Flags.Update | Flags.Passive,
+    HookEffectTag.UnmountPassive | HookEffectTag.MountPassive,
+    create,
+    inputs
+  )
+}
+
 function useEffectImpl(
-  fiberEffectTag: EffectTag,
-  hookEffectTag: EffectTag,
+  fiberEffectTag: Flags,
+  hookEffectTag: HookEffectTag,
   create: Effect['create'],
   inputs: Effect['inputs']
 ): void {
@@ -75,12 +85,12 @@ function useEffectImpl(
     const prevEffect = currentHook.memoizedState
     destroy = prevEffect.destroy
     if (areHookInputsEqual(nextInputs, prevEffect.inputs)) {
-      pushEffect(EffectTag.NoFlags, create, destroy, nextInputs)
+      pushEffect(HookEffectTag.NoEffect, create, destroy, nextInputs)
       return
     }
   }
 
-  currentlyRenderingFiber.EffectTag |= fiberEffectTag
+  currentlyRenderingFiber.flags |= fiberEffectTag
   workInProgressHook.memoizedState = pushEffect(
     hookEffectTag,
     create,
@@ -140,7 +150,7 @@ function createWorkInProgressHook(): Hook {
 }
 
 function pushEffect(
-  tag: EffectTag,
+  tag: HookEffectTag,
   create: Effect['create'],
   destroy: Effect['destroy'],
   inputs: Effect['inputs']

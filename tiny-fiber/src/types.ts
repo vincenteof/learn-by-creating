@@ -27,7 +27,7 @@ export interface Fiber<P = Props> {
   stateNode?: FiberRoot | Node
   index?: number
   tag: WorkTag
-  EffectTag: EffectTag
+  flags: Flags
   memoizedState?: any
   updateQueue?: UpdateQueue
 }
@@ -48,7 +48,7 @@ export enum WorkTag {
   DOMComponent = 2,
 }
 
-export enum EffectTag {
+export enum Flags {
   NoFlags = 0b00000000000000000000,
   PerformedWork = 0b00000000000000000001,
   Placement = 0b00000000000000000010,
@@ -56,6 +56,13 @@ export enum EffectTag {
   PlacementAndUpdate = Placement | Update,
   Deletion = 0b00000000000000001000,
   Incomplete = 0b00000010000000000000,
+  Passive = 0b00000000010000000000,
+}
+
+export enum HookEffectTag {
+  NoEffect = 0b00000000,
+  MountPassive = 0b01000000,
+  UnmountPassive = 0b10000000,
 }
 
 export type Update<A = any> = {
@@ -76,7 +83,7 @@ export interface Hook {
 }
 
 export type Effect = {
-  tag: EffectTag
+  tag: HookEffectTag
   create: () => any
   destroy?: () => any
   inputs: Array<any>

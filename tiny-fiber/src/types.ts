@@ -18,7 +18,7 @@ export type Thing = Element | Thing[]
 export interface Fiber<P = Props> {
   type: Element<P>['type']
   pendingProps: Element<P>['props']
-  prevProps: Element<P>['props']
+  memoizedProps: Element<P>['props']
   key?: Element<P>['key']
   return?: Fiber
   sibling?: Fiber
@@ -27,7 +27,9 @@ export interface Fiber<P = Props> {
   stateNode?: FiberRoot | Node
   index?: number
   tag: WorkTag
-  effectFlag: EffectFlag
+  EffectTag: EffectTag
+  memoizedState?: any
+  updateQueue?: UpdateQueue
 }
 
 export interface RootRenderer {
@@ -46,7 +48,7 @@ export enum WorkTag {
   DOMComponent = 2,
 }
 
-export enum EffectFlag {
+export enum EffectTag {
   NoFlags = 0b00000000000000000000,
   PerformedWork = 0b00000000000000000001,
   Placement = 0b00000000000000000010,
@@ -56,4 +58,31 @@ export enum EffectFlag {
   Incomplete = 0b00000010000000000000,
 }
 
-export interface Hook {}
+export type Update<A = any> = {
+  action: A
+  next: Update<A> | undefined
+}
+
+export type UpdateQueue<A = any> = {
+  last: Update<A> | undefined
+  dispatch: any
+}
+export interface Hook {
+  memoizedState?: any
+  next?: Hook
+  baseState?: any
+  baseQueue?: Update
+  queue?: UpdateQueue
+}
+
+export type Effect = {
+  tag: EffectTag
+  create: () => any
+  destroy?: () => any
+  inputs: Array<any>
+  next?: Effect
+}
+
+export type FunctionComponentUpdateQueue = {
+  lastEffect?: Effect
+}

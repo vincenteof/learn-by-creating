@@ -1,4 +1,4 @@
-import { Fiber, FiberRoot, WorkTag, EffectFlag } from '../types'
+import { Fiber, FiberRoot, WorkTag, EffectTag } from '../types'
 import { createWIP } from '../fiber'
 import beginWork from './beginWork'
 import completeWork from './completeWork'
@@ -35,7 +35,7 @@ function workLoop(dl: IdleDeadline, root: FiberRoot) {
 function performUnitOfWork(WIP: Fiber) {
   const current = WIP.alternate
   let next = beginWork(current, WIP)
-  WIP.prevProps = WIP.pendingProps
+  WIP.memoizedProps = WIP.pendingProps
   if (!next) {
     next = completeUnitOfWork(WIP)
   }
@@ -47,7 +47,7 @@ function completeUnitOfWork(WIP: Fiber) {
     const current = WIP.alternate
     const returnFiber = WIP.return
     const siblingFiber = WIP.sibling
-    if ((WIP.effectFlag & EffectFlag.Incomplete) === EffectFlag.NoFlags) {
+    if ((WIP.EffectTag & EffectTag.Incomplete) === EffectTag.NoFlags) {
       let next = completeWork(current, WIP)
       if (next) {
         return next

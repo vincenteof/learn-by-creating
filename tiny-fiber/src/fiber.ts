@@ -1,4 +1,4 @@
-import { Fiber, WorkTag, EffectFlag, Element } from './types'
+import { Fiber, WorkTag, EffectTag, Element } from './types'
 
 export function createWIP(current: Fiber, props: Record<string, any>) {
   let WIP = current.alternate
@@ -23,8 +23,8 @@ export function createFiber(
     tag,
     type,
     pendingProps: props,
-    prevProps: {},
-    effectFlag: EffectFlag.NoFlags,
+    memoizedProps: {},
+    EffectTag: EffectTag.NoFlags,
     key,
   }
 }

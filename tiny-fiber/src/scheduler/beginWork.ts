@@ -1,6 +1,7 @@
 import { Fiber, WorkTag, FiberRoot } from '../types'
 import { cloneChildFibers } from '../fiber'
 import { reconcileChildren } from '../reconciler'
+import { prepareHooks, finishHooks } from './hooks'
 
 function updateRoot(current: Fiber | undefined, WIP: Fiber) {
   const fRoot = WIP.stateNode as FiberRoot
@@ -19,17 +20,18 @@ function updateDOMComponent(current: Fiber | undefined, WIP: Fiber) {
 function updateFC(current: Fiber | undefined, WIP: Fiber) {
   const Component = WIP.type as Function
   const pendingProps = WIP.pendingProps
-  let nextChildren = Component(pendingProps)
-  // todo: deal with hooks
+  prepareHooks(current, WIP)
+  const nextChildren = Component(pendingProps)
+  finishHooks()
   reconcileChildren(current, WIP, nextChildren)
   return WIP.child
 }
 
 function beginWork(current: Fiber | undefined, WIP: Fiber): Fiber | undefined {
   if (!current) {
-    const prevProps = current.prevProps
+    const memoizedProps = current.memoizedProps
     const pendingProps = WIP.pendingProps
-    if (prevProps === pendingProps) {
+    if (memoizedProps === pendingProps) {
       if (WIP.tag === WorkTag.HostRoot) {
         // todo: do something???
       }

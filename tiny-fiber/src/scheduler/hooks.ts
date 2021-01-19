@@ -80,8 +80,8 @@ function useEffectImpl(
 ): void {
   workInProgressHook = createWorkInProgressHook()
   let nextInputs = inputs !== undefined && inputs !== null ? inputs : [create]
-  let destroy = null
-  if (currentHook !== null) {
+  let destroy = undefined
+  if (currentHook) {
     const prevEffect = currentHook.memoizedState
     destroy = prevEffect.destroy
     if (areHookInputsEqual(nextInputs, prevEffect.inputs)) {
@@ -161,12 +161,12 @@ function pushEffect(
     destroy,
     inputs,
   }
-  if (componentUpdateQueue === null) {
+  if (!componentUpdateQueue) {
     componentUpdateQueue = createFunctionComponentUpdateQueue()
     componentUpdateQueue.lastEffect = effect.next = effect
   } else {
     const lastEffect = componentUpdateQueue.lastEffect
-    if (lastEffect === null) {
+    if (!lastEffect) {
       effect.next = effect
       componentUpdateQueue.lastEffect = effect.next
     } else {
@@ -181,7 +181,7 @@ function pushEffect(
 
 function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
   return {
-    lastEffect: null,
+    lastEffect: undefined,
   }
 }
 

@@ -77,6 +77,7 @@ export type UpdateQueue<A = any> = {
 export interface Hook {
   memoizedState?: any
   next?: Hook
+  // the rest fields are for `useReducer`
   baseState?: any
   baseQueue?: Update
   queue?: UpdateQueue
@@ -93,3 +94,10 @@ export type Effect = {
 export type FunctionComponentUpdateQueue = {
   lastEffect?: Effect
 }
+
+// todo: can i define something like `BasicStateAction<S notExtends Function>`
+export type BasicStateAction<S> = S extends Function
+  ? (state: S) => S
+  : ((state: S) => S) | S
+
+export type Dispatch<A> = (action: A) => void

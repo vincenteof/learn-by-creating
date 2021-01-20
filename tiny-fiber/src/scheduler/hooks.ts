@@ -14,8 +14,10 @@ import { scheduleWork } from '../scheduler'
 
 let currentlyRenderingFiber: Fiber | undefined
 
+// belong to the current fiber
 let firstCurrentHook: Hook | undefined
 let currentHook: Hook | undefined
+// belong to the WIP fiber
 let firstWorkInProgressHook: Hook | undefined
 let workInProgressHook: Hook | undefined
 
@@ -87,7 +89,7 @@ export function useReducer<S, A>(
 ): [S, Dispatch<A>] {
   workInProgressHook = createWorkInProgressHook()
   let queue: UpdateQueue<A> | undefined = workInProgressHook.queue
-  if (!queue) {
+  if (queue) {
     // Already have a queue, so this is an update.
     if (isReRender) {
       // This is a re-render. Apply the new render phase updates to the previous
@@ -170,11 +172,13 @@ export function useReducer<S, A>(
   } else if (initialAction !== undefined && initialAction !== null) {
     initialState = reducer(initialState, initialAction)
   }
-  workInProgressHook.memoizedState = workInProgressHook.baseState = initialState
-  queue = workInProgressHook.queue = {
+  workInProgressHook.baseState = initialState
+  workInProgressHook.memoizedState = workInProgressHook.baseState
+  workInProgressHook.queue = {
     last: undefined,
     dispatch: undefined,
   }
+  queue = workInProgressHook.queue
   queue.dispatch = dispatchAction.bind(
     undefined,
     currentlyRenderingFiber,
@@ -182,6 +186,56 @@ export function useReducer<S, A>(
   )
   const dispatch: Dispatch<A> = queue.dispatch
   return [workInProgressHook.memoizedState, dispatch]
+}
+
+function dispatchAction<A>(fiber: Fiber, queue: UpdateQueue<A>, action: A) {
+  const alternate = fiber.alternate
+  if (
+    fiber === currentlyRenderingFiber ||
+    (alternate && alternate === currentlyRenderingFiber)
+  ) {
+    // This is a render phase update. Stash it in a lazily-created map of
+    // queue -> linked list of updates. After this render pass, we'll restart
+    // and apply the stashed updates on top of the work-in-progress hook.
+    const update: Update<A> = {
+      action,
+      next: null,
+    }
+    if (!renderPhaseUpdates) {
+      renderPhaseUpdates = new Map()
+    }
+    const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue)
+    if (!firstRenderPhaseUpdate) {
+      renderPhaseUpdates.set(queue, update)
+    } else {
+      // Append the update to the end of the list.
+      let lastRenderPhaseUpdate = firstRenderPhaseUpdate
+      while (lastRenderPhaseUpdate.next) {
+        lastRenderPhaseUpdate = lastRenderPhaseUpdate.next
+      }
+      lastRenderPhaseUpdate.next = update
+    }
+  } else {
+    const update: Update<A> = {
+      action,
+      next: null,
+    }
+    // Append the update to the end of the list.
+    const last = queue.last
+    if (last === null) {
+      // This is the first update. Create a circular list.
+      update.next = update
+    } else {
+      const first = last.next
+      if (first !== null) {
+        // Still circular.
+        update.next = first
+      }
+      last.next = update
+    }
+    queue.last = update
+    scheduleWork(fiber)
+  }
 }
 
 export function useEffect(create: Effect['create'], inputs: Effect['inputs']) {
@@ -284,7 +338,8 @@ function pushEffect(
   }
   if (!componentUpdateQueue) {
     componentUpdateQueue = createFunctionComponentUpdateQueue()
-    componentUpdateQueue.lastEffect = effect.next = effect
+    effect.next = effect
+    componentUpdateQueue.lastEffect = effect.next
   } else {
     const lastEffect = componentUpdateQueue.lastEffect
     if (!lastEffect) {
@@ -320,54 +375,4 @@ function areHookInputsEqual(
     return false
   }
   return true
-}
-
-function dispatchAction<A>(fiber: Fiber, queue: UpdateQueue<A>, action: A) {
-  const alternate = fiber.alternate
-  if (
-    fiber === currentlyRenderingFiber ||
-    (alternate && alternate === currentlyRenderingFiber)
-  ) {
-    // This is a render phase update. Stash it in a lazily-created map of
-    // queue -> linked list of updates. After this render pass, we'll restart
-    // and apply the stashed updates on top of the work-in-progress hook.
-    const update: Update<A> = {
-      action,
-      next: null,
-    }
-    if (!renderPhaseUpdates) {
-      renderPhaseUpdates = new Map()
-    }
-    const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue)
-    if (firstRenderPhaseUpdate === undefined) {
-      renderPhaseUpdates.set(queue, update)
-    } else {
-      // Append the update to the end of the list.
-      let lastRenderPhaseUpdate = firstRenderPhaseUpdate
-      while (lastRenderPhaseUpdate.next) {
-        lastRenderPhaseUpdate = lastRenderPhaseUpdate.next
-      }
-      lastRenderPhaseUpdate.next = update
-    }
-  } else {
-    const update: Update<A> = {
-      action,
-      next: null,
-    }
-    // Append the update to the end of the list.
-    const last = queue.last
-    if (last === null) {
-      // This is the first update. Create a circular list.
-      update.next = update
-    } else {
-      const first = last.next
-      if (first !== null) {
-        // Still circular.
-        update.next = first
-      }
-      last.next = update
-    }
-    queue.last = update
-    scheduleWork(fiber)
-  }
 }

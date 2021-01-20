@@ -28,7 +28,7 @@ export interface Fiber<P = Props> {
   index?: number
   tag: WorkTag
   flags: Flags
-  memoizedState?: any
+  memoizedState?: Hook
   updateQueue?: UpdateQueue
 }
 
@@ -65,6 +65,15 @@ export enum HookEffectTag {
   UnmountPassive = 0b10000000,
 }
 
+export interface Hook {
+  memoizedState?: any
+  next?: Hook
+  // the rest fields are specifically for `useReducer`
+  baseState?: any
+  baseQueue?: Update
+  queue?: UpdateQueue
+}
+
 export type Update<A = any> = {
   action: A
   next: Update<A> | undefined
@@ -73,14 +82,6 @@ export type Update<A = any> = {
 export type UpdateQueue<A = any> = {
   last: Update<A> | undefined
   dispatch: any
-}
-export interface Hook {
-  memoizedState?: any
-  next?: Hook
-  // the rest fields are for `useReducer`
-  baseState?: any
-  baseQueue?: Update
-  queue?: UpdateQueue
 }
 
 export type Effect = {

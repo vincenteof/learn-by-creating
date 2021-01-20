@@ -129,18 +129,18 @@ export function useReducer<S, A>(
     // The last update in the entire queue
     const last = queue.last
     // The last update that is part of the base state.
-    const baseUpdate = workInProgressHook.baseQueue
+    const baseQueue = workInProgressHook.baseQueue
 
     // Find the first unprocessed update.
-    let first: Update<any>
-    if (baseUpdate) {
+    let first: Update
+    if (baseQueue) {
       if (last) {
         // For the first update, the queue is a circular linked list where
         // `queue.last.next = queue.first`. Once the first update commits, and
         // the `baseUpdate` is no longer empty, we can unravel the list.
         last.next = undefined
       }
-      first = baseUpdate.next
+      first = baseQueue.next
     } else {
       first = last?.next
     }

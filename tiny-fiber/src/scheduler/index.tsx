@@ -18,7 +18,7 @@ function performWork(dl: IdleDeadline, root: FiberRoot) {
   } else {
     const finishedWork = root.current.alternate
     if (finishedWork) {
-      completeRoot(root, finishedWork)
+      commitRoot(root, finishedWork)
     }
   }
 }
@@ -52,12 +52,42 @@ function completeUnitOfWork(WIP: Fiber) {
       if (next) {
         return next
       }
+      if (
+        returnFiber &&
+        (returnFiber.flags & Flags.Incomplete) === Flags.NoFlags
+      ) {
+        if (!returnFiber.firstEffect) {
+          returnFiber.firstEffect = WIP.firstEffect
+        }
+        if (WIP.lastEffect) {
+          if (returnFiber.lastEffect) {
+            returnFiber.lastEffect.nextEffect = WIP.firstEffect
+          }
+          returnFiber.lastEffect = WIP.lastEffect
+        }
+
+        if (WIP.flags > Flags.PerformedWork) {
+          if (returnFiber.lastEffect) {
+            returnFiber.lastEffect.nextEffect = WIP
+          } else {
+            returnFiber.firstEffect = WIP
+          }
+          returnFiber.lastEffect = WIP
+        }
+      }
+    }
+    if (siblingFiber) {
+      return siblingFiber
+    } else if (returnFiber) {
+      WIP = returnFiber
+      continue
+    } else {
+      return undefined
     }
   }
-  return undefined
 }
 
-function completeRoot(root: FiberRoot, finishedWork: Fiber) {}
+function commitRoot(root: FiberRoot, finishedWork: Fiber) {}
 
 function getRootFromFiber(fiber: Fiber) {
   let cur = fiber

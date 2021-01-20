@@ -30,6 +30,9 @@ export interface Fiber<P = Props> {
   flags: Flags
   memoizedState?: Hook
   updateQueue?: UpdateQueue
+  nextEffect?: Fiber
+  lastEffect?: Fiber
+  firstEffect?: Fiber
 }
 
 export interface RootRenderer {

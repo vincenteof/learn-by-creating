@@ -1,4 +1,4 @@
-import { Fiber, WorkTag, Flags, Element } from './types'
+import { Fiber, WorkTag, Flags, Element, FiberRoot } from './types'
 
 export function createWIP(current: Fiber, props: Record<string, any>) {
   let WIP = current.alternate
@@ -64,4 +64,12 @@ export function cloneChildFibers(WIP: Fiber) {
     newChild = newChild.sibling
     newChild.return = WIP
   }
+}
+
+export function getRootFromFiber(fiber: Fiber) {
+  let cur = fiber
+  while (cur.tag !== WorkTag.HostRoot && cur.return) {
+    cur = fiber.return
+  }
+  return cur.stateNode as FiberRoot
 }

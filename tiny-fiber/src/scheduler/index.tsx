@@ -1,7 +1,13 @@
-import { Fiber, FiberRoot, WorkTag, Flags } from '../types'
-import { createWIP } from '../fiber'
+import { Fiber, FiberRoot, WorkTag, Flags, HookEffectTag } from '../types'
+import { createWIP, getRootFromFiber } from '../fiber'
 import beginWork from './beginWork'
 import completeWork from './completeWork'
+import {
+  commitPlacement,
+  commitWork,
+  commitDeletion,
+  commitWithEffectList,
+} from './commitWork'
 
 const expireTime = 1
 let nextUnitOfWork: Fiber | undefined
@@ -138,7 +144,52 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber) {
   }
 }
 
-function commitAllHostEffects() {}
+function commitAllHostEffects() {
+  while (nextEffect) {
+    const flags = nextEffect.flags
+    // The following switch statement is only concerned about placement,
+    // updates, and deletions. To avoid needing to add a case for every
+    // possible bitmap value, we remove the secondary effects from the
+    // effect tag and switch on that value.
+    let primaryEffectTag =
+      flags & (Flags.Placement | Flags.Update | Flags.Deletion)
+    switch (primaryEffectTag) {
+      case Flags.Placement: {
+        commitPlacement(nextEffect)
+        // Clear the "placement" from effect tag so that we know that this is inserted, before
+        // any life-cycles like componentDidMount gets called.
+        // TODO: findDOMNode doesn't rely on this any more but isMounted
+        // does and isMounted is deprecated anyway so we should be able
+        // to kill this.
+        nextEffect.flags &= ~Flags.Placement
+        break
+      }
+      case Flags.PlacementAndUpdate: {
+        // Placement
+        commitPlacement(nextEffect)
+        // Clear the "placement" from effect tag so that we know that this is inserted, before
+        // any life-cycles like componentDidMount gets called.
+        nextEffect.flags &= ~Flags.Placement
+        // Update
+        const current = nextEffect.alternate
+        commitWork(current, nextEffect)
+        break
+      }
+      case Flags.Update: {
+        const current = nextEffect.alternate
+        commitWork(current, nextEffect)
+        break
+      }
+      case Flags.Deletion: {
+        commitDeletion(nextEffect)
+        break
+      }
+      default:
+        break
+    }
+    nextEffect = nextEffect.nextEffect
+  }
+}
 
 function commitAllLifeCycles(finishedRoot: FiberRoot) {
   while (nextEffect) {
@@ -151,6 +202,20 @@ function commitAllLifeCycles(finishedRoot: FiberRoot) {
       rootWithPendingPassiveEffects = finishedRoot
     }
     nextEffect = nextEffect.nextEffect
+  }
+}
+
+function commitLifeCycles(finishedWork: Fiber) {
+  switch (finishedWork.tag) {
+    case WorkTag.FunctionComponent:
+      commitWithEffectList(
+        HookEffectTag.UnmountLayout,
+        HookEffectTag.MountLayout,
+        finishedWork
+      )
+      return
+    default:
+      console.error('Some error happens in `commitLifeCycles`!')
   }
 }
 
@@ -167,22 +232,4 @@ function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
     }
     effect = effect.nextEffect
   } while (effect)
-}
-
-function commitLifeCycles(finishedWork: Fiber) {
-  switch (finishedWork.tag) {
-    case WorkTag.FunctionComponent:
-      // commitWithEffectList(UnmountLayout, MountLayout, finishedWork)
-      return
-    default:
-      console.error('Some error happens in `commitLifeCycles`!')
-  }
-}
-
-function getRootFromFiber(fiber: Fiber) {
-  let cur = fiber
-  while (cur.tag !== WorkTag.HostRoot && cur.return) {
-    cur = fiber.return
-  }
-  return cur.stateNode as FiberRoot
 }

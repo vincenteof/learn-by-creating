@@ -21,7 +21,7 @@ let currentHook: Hook | undefined
 let firstWorkInProgressHook: Hook | undefined
 let workInProgressHook: Hook | undefined
 
-let componentUpdateQueue = undefined
+let componentUpdateQueue: FunctionComponentUpdateQueue = undefined
 
 let isReRender = false
 let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | undefined
@@ -355,10 +355,10 @@ function pushEffect(
   return effect
 }
 
-function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
+function createFunctionComponentUpdateQueue() {
   return {
     lastEffect: undefined,
-  }
+  } as FunctionComponentUpdateQueue
 }
 
 function areHookInputsEqual(
